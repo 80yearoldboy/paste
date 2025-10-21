@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - 在线剪贴板</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 onclick="location.href='index.html'">📋 在线剪贴板</h1>
+        </header>
+
+        <div class="auth-form">
+            <h2>注册</h2>
+            <form id="register-form">
+                <input type="email" id="email" placeholder="邮箱" required>
+                <input type="password" id="password" placeholder="密码（至少6位）" minlength="6" required>
+                <input type="text" id="username" placeholder="用户名" required>
+                <button type="submit">注册</button>
+            </form>
+            <p style="text-align: center; margin-top: 20px;">
+                已有账号？ <a href="login.html">立即登录</a>
+            </p>
+            <div id="message"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        document.getElementById('register-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const username = document.getElementById('username').value;
+            const messageDiv = document.getElementById('message');
+
+            // 先注册用户
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email: email,
+                password: password,
+            });
+
+            if (authError) {
+                messageDiv.innerHTML = `<div class="error">注册失败: ${authError.message}</div>`;
+                return;
+            }
+
+            // 在 users 表中创建用户记录
+            const { data: userData, error: userError } = await supabase
+                .from('users')
+                .insert([
+                    { 
+                        id: authData.user.id,
+                        email: email,
+                        username: username
+                    }
+                ]);
+
+            if (userError) {
+                messageDiv.innerHTML = `<div class="error">创建用户信息失败: ${userError.message}</div>`;
+                return;
+            }
+
+            messageDiv.innerHTML = `<div class="success">注册成功！请检查邮箱验证您的账户。</div>`;
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 2000);
+        });
+      // 在 register.html 中添加的脚本
+document.getElementById('register-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const username = document.getElementById('username').value;
+    const messageDiv = document.getElementById('message');
+
+    try {
+        // 先注册认证用户
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+            email: email,
+            password: password,
+        });
+
+        if (authError) {
+            throw new Error(authError.message);
+        }
+
+        if (authData.user) {
+            // 在 users 表中创建用户记录
+            const { error: userError } = await supabase
+                .from('users')
+                .insert([
+                    { 
+                        id: authData.user.id,
+                        email: email,
+                        username: username
+                    }
+                ]);
+
+            if (userError) {
+                throw new Error(userError.message);
+            }
+
+            messageDiv.innerHTML = `<div class="success">注册成功！请检查邮箱验证您的账户。</div>`;
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 2000);
+        }
+    } catch (error) {
+        messageDiv.innerHTML = `<div class="error">注册失败: ${error.message}</div>`;
+    }
+});
+    </script>
+</body>
+</html>
