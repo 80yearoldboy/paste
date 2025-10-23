@@ -72,51 +72,6 @@
                 window.location.href = 'login.html';
             }, 2000);
         });
-      // 在 register.html 中添加的脚本
-document.getElementById('register-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const username = document.getElementById('username').value;
-    const messageDiv = document.getElementById('message');
-
-    try {
-        // 先注册认证用户
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-            email: email,
-            password: password,
-        });
-
-        if (authError) {
-            throw new Error(authError.message);
-        }
-
-        if (authData.user) {
-            // 在 users 表中创建用户记录
-            const { error: userError } = await supabase
-                .from('users')
-                .insert([
-                    { 
-                        id: authData.user.id,
-                        email: email,
-                        username: username
-                    }
-                ]);
-
-            if (userError) {
-                throw new Error(userError.message);
-            }
-
-            messageDiv.innerHTML = `<div class="success">注册成功！请检查邮箱验证您的账户。</div>`;
-            setTimeout(() => {
-                window.location.href = 'login.html';
-            }, 2000);
-        }
-    } catch (error) {
-        messageDiv.innerHTML = `<div class="error">注册失败: ${error.message}</div>`;
-    }
-});
     </script>
 </body>
 </html>
