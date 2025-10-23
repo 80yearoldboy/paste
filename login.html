@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 在线剪贴板</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 onclick="location.href='index.html'">📋 在线剪贴板</h1>
+        </header>
+
+        <div class="auth-form">
+            <h2>登录</h2>
+            <form id="login-form">
+                <input type="email" id="email" placeholder="邮箱" required>
+                <input type="password" id="password" placeholder="密码" required>
+                <button type="submit">登录</button>
+            </form>
+            <p style="text-align: center; margin-top: 20px;">
+                还没有账号？ <a href="register.html">立即注册</a>
+            </p>
+            <div id="message"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const messageDiv = document.getElementById('message');
+
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
+            if (error) {
+                messageDiv.innerHTML = `<div class="error">登录失败: ${error.message}</div>`;
+            } else {
+                messageDiv.innerHTML = `<div class="success">登录成功！</div>`;
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+</html>
