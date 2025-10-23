@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的剪贴板</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 onclick="location.href='index.html'">📋 我的剪贴板</h1>
+            <nav>
+                <span id="user-info"></span>
+                <button onclick="location.href='index.html'">首页</button>
+                <button onclick="logout()">退出</button>
+            </nav>
+        </header>
+
+        <main>
+            <div class="paste-form">
+                <h2>创建新剪贴</h2>
+                <form id="paste-form">
+                    <input type="text" id="title" placeholder="标题（可选）" maxlength="100">
+                    <textarea id="content" placeholder="在这里粘贴你的内容..." required></textarea>
+                    <select id="status">
+                        <option value="private">私有</option>
+                        <option value="public">公开</option>
+                    </select>
+                    <button type="submit">保存剪贴</button>
+                </form>
+            </div>
+
+            <div class="recent-pastes">
+                <h2>我的剪贴历史</h2>
+                <div id="user-pastes-list"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // 获取用户的所有剪贴
+        async function getUserPastes() {
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (!session) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const { data, error } = await supabase
+                .from('submissions')
+                .select('*')
+                .eq('user_id', session.user.id)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error fetching user pastes:', error);
+                return [];
+            }
+
+            return data;
+        }
+
+        // 显示用户的剪贴
+        function displayUserPastes(pastes) {
+            const container = document.getElementById('user-pastes-list');
+            if (!container) return;
+
+            if (pastes.length === 0) {
+                container.innerHTML = '<p>您还没有创建任何剪贴</p>';
+                return;
+            }
+
+            container.innerHTML = pastes.map(paste => `
+                <div class="paste-item">
+                    <h3>${paste.title} <span style="color: ${paste.status === 'public' ? '#27ae60' : '#e74c3c'}; font-size: 12px;">
+                        (${paste.status === 'public' ? '公开' : '私有'})
+                    </span></h3>
+                    <div class="paste-content">${paste.content}</div>
+                    <div class="paste-meta">
+                        创建时间: ${new Date(paste.created_at).toLocaleString()}
+                        <button onclick="deletePaste('${paste.id}')" style="margin-left: 10px; background: #e74c3c; color: white; padding: 5px 10px; font-size: 12px;">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 删除剪贴
+        async function deletePaste(pasteId) {
+            if (!confirm('确定要删除这个剪贴吗？')) return;
+
+            const { error } = await supabase
+                .from('submissions')
+                .delete()
+                .eq('id', pasteId);
+
+            if (error) {
+                alert('删除失败: ' + error.message);
+            } else {
+                alert('删除成功');
+                loadUserPastes();
+            }
+        }
+
+        // 加载用户剪贴
+        async function loadUserPastes() {
+            const pastes = await getUserPastes();
+            displayUserPastes(pastes);
+        }
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', async function() {
+            await checkAuth();
+            await loadUserPastes();
+
+            // 处理表单提交
+            const pasteForm = document.getElementById('paste-form');
+            if (pasteForm) {
+                pasteForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const title = document.getElementById('title').value;
+                    const content = document.getElementById('content').value;
+                    const status = document.getElementById('status').value;
+
+                    if (!content.trim()) {
+                        alert('请输入内容');
+                        return;
+                    }
+
+                    await createPaste(title, content, status);
+                    await loadUserPastes();
+                    pasteForm.reset();
+                });
+            }
+        });
+    </script>
+</body>
+</html>
