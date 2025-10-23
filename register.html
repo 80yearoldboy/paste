@@ -4,116 +4,324 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>注册 - 在线剪贴板</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .info {
-            color: #3498db;
-            background: #d6eaf8;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 15px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
         
-        .debug-info {
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 450px;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .logo h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .logo p {
+            opacity: 0.8;
+        }
+        
+        .auth-form {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+        
+        .auth-form h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #5a6fd8;
+        }
+        
+        .links {
+            text-align: center;
+            margin-top: 25px;
+        }
+        
+        .links a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .links a:hover {
+            text-decoration: underline;
+        }
+        
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .config-panel {
             background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 5px;
+            border-radius: 8px;
             padding: 15px;
             margin-top: 20px;
-            font-size: 12px;
-            display: none;
+            font-size: 14px;
         }
         
-        .debug-toggle {
-            background: none;
-            border: none;
-            color: #3498db;
-            text-decoration: underline;
-            cursor: pointer;
-            font-size: 12px;
+        .config-panel h3 {
+            margin-bottom: 10px;
+            color: #495057;
+        }
+        
+        .config-input {
+            margin-bottom: 10px;
+        }
+        
+        .config-input label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 13px;
+        }
+        
+        .test-btn {
+            background: #28a745;
             margin-top: 10px;
+        }
+        
+        .test-btn:hover {
+            background: #218838;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1 onclick="location.href='index.html'">📋 在线剪贴板</h1>
-        </header>
-
+        <div class="logo">
+            <h1>📋</h1>
+            <h1>在线剪贴板</h1>
+            <p>安全保存和分享你的文本片段</p>
+        </div>
+        
         <div class="auth-form">
-            <h2>注册账户</h2>
-            <form id="register-form">
-                <input type="email" id="email" placeholder="邮箱地址" required>
-                <input type="password" id="password" placeholder="密码（至少6位）" minlength="6" required>
-                <input type="text" id="username" placeholder="用户名" required>
-                <button type="submit">注册</button>
-            </form>
-            <p style="text-align: center; margin-top: 20px;">
-                已有账号？ <a href="login.html">立即登录</a>
-            </p>
+            <h2>创建账户</h2>
+            
             <div id="message"></div>
             
-            <button class="debug-toggle" onclick="toggleDebug()">显示调试信息</button>
-            <div id="debug-info" class="debug-info"></div>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="email">电子邮箱</label>
+                    <input type="email" id="email" placeholder="your@email.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" placeholder="至少6位字符" minlength="6" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" placeholder="选择用户名" required>
+                </div>
+                
+                <button type="submit">注册</button>
+            </form>
+            
+            <div class="links">
+                <p>已有账户？ <a href="login.html">立即登录</a></p>
+            </div>
+            
+            <div class="config-panel">
+                <h3>Supabase 配置</h3>
+                <div class="form-group config-input">
+                    <label for="supabase-url">Supabase URL</label>
+                    <input type="text" id="supabase-url" placeholder="https://your-project.supabase.co">
+                </div>
+                
+                <div class="form-group config-input">
+                    <label for="supabase-key">Supabase Anon Key</label>
+                    <input type="text" id="supabase-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+                </div>
+                
+                <button class="test-btn" id="test-connection">测试连接</button>
+            </div>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Supabase 配置 - 请替换为你的实际配置
-        const SUPABASE_URL = 'https://qxdravwmyllgkikbloza.supabase.co'; // 替换为你的 Supabase URL
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4ZHJhdndteWxsZ2tpa2Jsb3phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwMDk1NDksImV4cCI6MjA3NjU4NTU0OX0.p6kKj-ILhfjw1WG203fBYKxg2hFh4bOfp4CPsh6B7Jw'; // 替换为你的 anon key
+        // 配置状态
+        let supabase = null;
+        let isConfigured = false;
         
-        // 初始化 Supabase
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
-        // 调试功能
-        function logDebug(message) {
-            const debugDiv = document.getElementById('debug-info');
-            debugDiv.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${message}</div>`;
-            console.log(message);
+        // 初始化配置
+        function initConfig() {
+            // 尝试从本地存储加载配置
+            const savedUrl = localStorage.getItem('supabase_url');
+            const savedKey = localStorage.getItem('supabase_key');
+            
+            if (savedUrl && savedKey) {
+                document.getElementById('supabase-url').value = savedUrl;
+                document.getElementById('supabase-key').value = savedKey;
+                initSupabase(savedUrl, savedKey);
+            }
         }
         
-        function toggleDebug() {
-            const debugDiv = document.getElementById('debug-info');
-            debugDiv.style.display = debugDiv.style.display === 'none' ? 'block' : 'none';
-        }
-        
-        // 注册表单处理
-        document.getElementById('register-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const username = document.getElementById('username').value;
-            const messageDiv = document.getElementById('message');
-            
-            // 清空之前的消息
-            messageDiv.innerHTML = '';
-            document.getElementById('debug-info').innerHTML = '';
-            
-            // 验证输入
-            if (!email || !password || !username) {
-                messageDiv.innerHTML = '<div class="error">请填写所有字段</div>';
-                return;
+        // 初始化 Supabase 客户端
+        function initSupabase(url, key) {
+            if (!url || !key) {
+                showMessage('请提供 Supabase URL 和 Anon Key', 'error');
+                return false;
             }
-            
-            if (password.length < 6) {
-                messageDiv.innerHTML = '<div class="error">密码至少需要6位字符</div>';
-                return;
-            }
-            
-            logDebug('开始注册流程...');
-            logDebug(`邮箱: ${email}, 用户名: ${username}`);
             
             try {
-                messageDiv.innerHTML = '<div class="info">注册中，请稍候...</div>';
+                supabase = supabase.createClient(url, key);
+                isConfigured = true;
+                showMessage('Supabase 配置成功!', 'success');
+                return true;
+            } catch (error) {
+                showMessage('配置失败: ' + error.message, 'error');
+                return false;
+            }
+        }
+        
+        // 显示消息
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `<div class="${type}">${message}</div>`;
+            
+            // 5秒后自动清除错误/成功消息
+            if (type !== 'info') {
+                setTimeout(() => {
+                    messageDiv.innerHTML = '';
+                }, 5000);
+            }
+        }
+        
+        // 测试连接
+        async function testConnection() {
+            const url = document.getElementById('supabase-url').value;
+            const key = document.getElementById('supabase-key').value;
+            
+            if (!url || !key) {
+                showMessage('请填写 Supabase URL 和 Anon Key', 'error');
+                return;
+            }
+            
+            showMessage('测试连接中...', 'info');
+            
+            // 保存配置
+            localStorage.setItem('supabase_url', url);
+            localStorage.setItem('supabase_key', key);
+            
+            if (!initSupabase(url, key)) {
+                return;
+            }
+            
+            try {
+                // 尝试查询数据库
+                const { data, error } = await supabase.from('users').select('count').limit(1);
                 
-                // 1. 使用 Supabase Auth 注册用户
-                logDebug('调用 supabase.auth.signUp...');
-                
-                const { data: authData, error: authError } = await supabase.auth.signUp({
+                if (error) {
+                    if (error.code === 'PGRST116') {
+                        showMessage('连接成功! 但 users 表可能不存在', 'info');
+                    } else {
+                        showMessage('连接测试失败: ' + error.message, 'error');
+                    }
+                } else {
+                    showMessage('连接成功! 数据库访问正常', 'success');
+                }
+            } catch (error) {
+                showMessage('连接测试异常: ' + error.message, 'error');
+            }
+        }
+        
+        // 注册用户
+        async function registerUser(email, password, username) {
+            if (!isConfigured) {
+                showMessage('请先配置 Supabase 连接', 'error');
+                return false;
+            }
+            
+            showMessage('注册中...', 'info');
+            
+            try {
+                // 1. 注册认证用户
+                const { data, error } = await supabase.auth.signUp({
                     email: email,
                     password: password,
                     options: {
@@ -123,105 +331,85 @@
                     }
                 });
                 
-                logDebug(`注册响应: ${JSON.stringify({ authData, authError })}`);
-                
-                if (authError) {
-                    let errorMessage = authError.message;
+                if (error) {
+                    let errorMessage = error.message;
                     
-                    // 提供更友好的错误信息
-                    if (authError.message.includes('Password should be at least')) {
-                        errorMessage = '密码至少需要6位字符';
-                    } else if (authError.message.includes('User already registered')) {
+                    // 提供友好的错误信息
+                    if (error.message.includes('User already registered')) {
                         errorMessage = '该邮箱已被注册';
-                    } else if (authError.message.includes('Invalid email')) {
+                    } else if (error.message.includes('Invalid email')) {
                         errorMessage = '请输入有效的邮箱地址';
-                    } else if (authError.message.includes('Email rate limit exceeded')) {
+                    } else if (error.message.includes('Password should be at least')) {
+                        errorMessage = '密码至少需要6位字符';
+                    } else if (error.message.includes('Email rate limit exceeded')) {
                         errorMessage = '发送邮件过于频繁，请稍后再试';
                     }
                     
-                    throw new Error(errorMessage);
+                    showMessage('注册失败: ' + errorMessage, 'error');
+                    return false;
                 }
                 
-                if (authData.user) {
-                    logDebug(`用户创建成功，ID: ${authData.user.id}`);
-                    
-                    // 2. 尝试在 users 表中创建用户记录
-                    try {
-                        logDebug('尝试在 users 表中创建记录...');
-                        
-                        const { data: userData, error: userError } = await supabase
-                            .from('users')
-                            .insert([
-                                { 
-                                    id: authData.user.id,
-                                    email: email,
-                                    username: username
-                                }
-                            ])
-                            .select();
-                        
-                        if (userError) {
-                            logDebug(`在 users 表创建记录失败: ${userError.message}`);
-                            // 如果触发器已经创建了记录，这里可能会报错，但可以忽略
-                            if (!userError.message.includes('duplicate key')) {
-                                console.warn('创建用户记录失败:', userError);
-                            }
-                        } else {
-                            logDebug(`users 表记录创建成功: ${JSON.stringify(userData)}`);
-                        }
-                    } catch (userError) {
-                        logDebug(`创建用户记录时出错: ${userError.message}`);
-                        // 忽略这个错误，因为可能是触发器已经创建了记录
-                    }
-                    
-                    // 显示成功消息
-                    messageDiv.innerHTML = `
-                        <div class="success">
-                            <h3>🎉 注册成功！</h3>
-                            <p>我们已向 <strong>${email}</strong> 发送了验证邮件。</p>
-                            <p>请检查您的邮箱并点击验证链接，验证后即可登录。</p>
-                            <small>如果没有收到邮件，请检查垃圾邮件文件夹。</small>
-                        </div>
-                    `;
+                if (data.user) {
+                    showMessage(`
+                        <h3>🎉 注册成功!</h3>
+                        <p>我们已向 <strong>${email}</strong> 发送了验证邮件。</p>
+                        <p>请检查您的邮箱并点击验证链接。</p>
+                        <p>验证后即可登录使用。</p>
+                    `, 'success');
                     
                     // 清空表单
                     document.getElementById('register-form').reset();
                     
-                    // 5秒后跳转到登录页面
-                    setTimeout(() => {
-                        window.location.href = 'login.html';
-                    }, 5000);
+                    return true;
                 } else {
-                    throw new Error('注册失败，请稍后重试');
-                }
-                
-            } catch (error) {
-                logDebug(`注册过程中出错: ${error.message}`);
-                messageDiv.innerHTML = `<div class="error">注册失败: ${error.message}</div>`;
-            }
-        });
-        
-        // 测试 Supabase 连接
-        async function testConnection() {
-            logDebug('测试 Supabase 连接...');
-            
-            try {
-                const { data, error } = await supabase.from('users').select('count').limit(1);
-                
-                if (error) {
-                    logDebug(`连接测试失败: ${error.message}`);
-                } else {
-                    logDebug('Supabase 连接正常');
+                    showMessage('注册失败: 未知错误', 'error');
+                    return false;
                 }
             } catch (error) {
-                logDebug(`连接测试异常: ${error.message}`);
+                showMessage('注册异常: ' + error.message, 'error');
+                return false;
             }
         }
         
-        // 页面加载时测试连接
+        // 事件监听
         document.addEventListener('DOMContentLoaded', function() {
-            logDebug('页面加载完成');
-            testConnection();
+            // 初始化配置
+            initConfig();
+            
+            // 测试连接按钮
+            document.getElementById('test-connection').addEventListener('click', testConnection);
+            
+            // 注册表单提交
+            document.getElementById('register-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const username = document.getElementById('username').value;
+                
+                // 基本验证
+                if (!email || !password || !username) {
+                    showMessage('请填写所有字段', 'error');
+                    return;
+                }
+                
+                if (password.length < 6) {
+                    showMessage('密码至少需要6位字符', 'error');
+                    return;
+                }
+                
+                // 注册用户
+                await registerUser(email, password, username);
+            });
+            
+            // 配置输入变化时自动保存
+            document.getElementById('supabase-url').addEventListener('input', function() {
+                localStorage.setItem('supabase_url', this.value);
+            });
+            
+            document.getElementById('supabase-key').addEventListener('input', function() {
+                localStorage.setItem('supabase_key', this.value);
+            });
         });
     </script>
 </body>
