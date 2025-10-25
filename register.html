@@ -167,6 +167,21 @@
         .test-btn:hover {
             background: #218838;
         }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -198,7 +213,9 @@
                     <input type="text" id="username" placeholder="选择用户名" required>
                 </div>
                 
-                <button type="submit">注册</button>
+                <button type="submit" id="submit-btn">
+                    <span id="submit-text">注册</span>
+                </button>
             </form>
             
             <div class="links">
@@ -222,42 +239,12 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- 使用更可靠的 Supabase CDN -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2.38.0/dist/umd/supabase.min.js"></script>
     <script>
         // 配置状态
-        let supabase = null;
+        let supabaseClient = null;
         let isConfigured = false;
-        
-        // 初始化配置
-        function initConfig() {
-            // 尝试从本地存储加载配置
-            const savedUrl = localStorage.getItem('supabase_url');
-            const savedKey = localStorage.getItem('supabase_key');
-            
-            if (savedUrl && savedKey) {
-                document.getElementById('supabase-url').value = savedUrl;
-                document.getElementById('supabase-key').value = savedKey;
-                initSupabase(savedUrl, savedKey);
-            }
-        }
-        
-        // 初始化 Supabase 客户端
-        function initSupabase(url, key) {
-            if (!url || !key) {
-                showMessage('请提供 Supabase URL 和 Anon Key', 'error');
-                return false;
-            }
-            
-            try {
-                supabase = supabase.createClient(url, key);
-                isConfigured = true;
-                showMessage('Supabase 配置成功!', 'success');
-                return true;
-            } catch (error) {
-                showMessage('配置失败: ' + error.message, 'error');
-                return false;
-            }
-        }
         
         // 显示消息
         function showMessage(message, type) {
@@ -272,6 +259,61 @@
             }
         }
         
+        // 显示/隐藏加载状态
+        function setLoading(loading) {
+            const submitBtn = document.getElementById('submit-btn');
+            const submitText = document.getElementById('submit-text');
+            
+            if (loading) {
+                submitBtn.disabled = true;
+                submitText.innerHTML = '<span class="loading"></span>处理中...';
+            } else {
+                submitBtn.disabled = false;
+                submitText.textContent = '注册';
+            }
+        }
+        
+        // 初始化配置
+        function initConfig() {
+            // 尝试从本地存储加载配置
+            const savedUrl = localStorage.getItem('supabase_url');
+            const savedKey = localStorage.getItem('supabase_key');
+            
+            if (savedUrl && savedKey) {
+                document.getElementById('supabase-url').value = savedUrl;
+                document.getElementById('supabase-key').value = savedKey;
+                initSupabase(savedUrl, savedKey);
+            } else {
+                showMessage('请先配置 Supabase 连接信息', 'info');
+            }
+        }
+        
+        // 初始化 Supabase 客户端
+        function initSupabase(url, key) {
+            if (!url || !key) {
+                showMessage('请提供 Supabase URL 和 Anon Key', 'error');
+                return false;
+            }
+            
+            try {
+                // 检查 Supabase 库是否已加载
+                if (typeof window.supabase === 'undefined') {
+                    showMessage('Supabase 库加载失败，请刷新页面重试', 'error');
+                    return false;
+                }
+                
+                // 创建 Supabase 客户端
+                supabaseClient = window.supabase.createClient(url, key);
+                isConfigured = true;
+                showMessage('Supabase 配置成功!', 'success');
+                return true;
+            } catch (error) {
+                console.error('Supabase 初始化错误:', error);
+                showMessage('配置失败: ' + error.message, 'error');
+                return false;
+            }
+        }
+        
         // 测试连接
         async function testConnection() {
             const url = document.getElementById('supabase-url').value;
@@ -282,6 +324,7 @@
                 return;
             }
             
+            setLoading(true);
             showMessage('测试连接中...', 'info');
             
             // 保存配置
@@ -289,12 +332,13 @@
             localStorage.setItem('supabase_key', key);
             
             if (!initSupabase(url, key)) {
+                setLoading(false);
                 return;
             }
             
             try {
                 // 尝试查询数据库
-                const { data, error } = await supabase.from('users').select('count').limit(1);
+                const { data, error } = await supabaseClient.from('users').select('count').limit(1);
                 
                 if (error) {
                     if (error.code === 'PGRST116') {
@@ -307,21 +351,24 @@
                 }
             } catch (error) {
                 showMessage('连接测试异常: ' + error.message, 'error');
+            } finally {
+                setLoading(false);
             }
         }
         
         // 注册用户
         async function registerUser(email, password, username) {
-            if (!isConfigured) {
-                showMessage('请先配置 Supabase 连接', 'error');
+            if (!isConfigured || !supabaseClient) {
+                showMessage('请先配置并测试 Supabase 连接', 'error');
                 return false;
             }
             
+            setLoading(true);
             showMessage('注册中...', 'info');
             
             try {
                 // 1. 注册认证用户
-                const { data, error } = await supabase.auth.signUp({
+                const { data, error } = await supabaseClient.auth.signUp({
                     email: email,
                     password: password,
                     options: {
@@ -368,11 +415,18 @@
             } catch (error) {
                 showMessage('注册异常: ' + error.message, 'error');
                 return false;
+            } finally {
+                setLoading(false);
             }
         }
         
         // 事件监听
         document.addEventListener('DOMContentLoaded', function() {
+            // 检查 Supabase 库是否已加载
+            if (typeof window.supabase === 'undefined') {
+                showMessage('警告: Supabase 库未正确加载，请刷新页面重试', 'error');
+            }
+            
             // 初始化配置
             initConfig();
             
