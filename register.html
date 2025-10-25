@@ -23,7 +23,7 @@
         
         .container {
             width: 100%;
-            max-width: 500px;
+            max-width: 550px;
         }
         
         .logo {
@@ -205,6 +205,40 @@
         .troubleshoot li {
             margin-bottom: 5px;
         }
+        
+        .solution-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f5e8;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+        }
+        
+        .solution-box h4 {
+            color: #155724;
+            margin-bottom: 10px;
+        }
+        
+        .solution-step {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+        }
+        
+        .solution-step h5 {
+            color: #155724;
+            margin-bottom: 5px;
+        }
+        
+        .code {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            overflow-x: auto;
+        }
     </style>
 </head>
 <body>
@@ -257,22 +291,50 @@
                     <input type="text" id="supabase-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
                 </div>
                 
+                <div class="form-group config-input">
+                    <label for="site-url">网站URL (重要!)</label>
+                    <input type="text" id="site-url" placeholder="https://yourusername.github.io/your-repo">
+                </div>
+                
                 <button class="test-btn" id="test-connection">测试连接</button>
+            </div>
+            
+            <div class="solution-box">
+                <h4>修复邮箱验证链接失效问题</h4>
+                <div class="solution-step">
+                    <h5>步骤 1: 在Supabase中配置正确的网站URL</h5>
+                    <p>登录Supabase控制台 → Authentication → URL Configuration</p>
+                    <p>设置 <strong>Site URL</strong> 为你的GitHub Pages地址:</p>
+                    <div class="code" id="site-url-display">https://yourusername.github.io/your-repo</div>
+                </div>
+                
+                <div class="solution-step">
+                    <h5>步骤 2: 添加重定向URL</h5>
+                    <p>在 <strong>Redirect URLs</strong> 中添加:</p>
+                    <div class="code" id="redirect-url-display">https://yourusername.github.io/your-repo/**</div>
+                </div>
+                
+                <div class="solution-step">
+                    <h5>步骤 3: 暂时禁用邮箱验证 (可选)</h5>
+                    <p>在 Authentication → Settings → Auth Settings 中:</p>
+                    <p>将 <strong>Confirm email</strong> 设置为 "Off" 进行测试</p>
+                </div>
             </div>
             
             <div class="troubleshoot">
                 <h4>故障排除</h4>
                 <ul>
                     <li>确保 Supabase URL 和 Key 正确无误</li>
-                    <li>检查网络连接是否正常</li>
-                    <li>尝试刷新页面重新加载</li>
-                    <li>如果问题持续，请尝试使用其他浏览器</li>
+                    <li>检查网站URL配置是否正确</li>
+                    <li>验证链接通常在24小时后过期</li>
+                    <li>尝试重新发送验证邮件</li>
                 </ul>
                 <button id="load-script-btn" style="background: #fd7e14; margin-top: 10px;">手动加载 Supabase 库</button>
             </div>
         </div>
     </div>
 
+    <script src="https://unpkg.com/@supabase/supabase-js@2.38.0/dist/umd/supabase.min.js"></script>
     <script>
         // 配置状态
         let supabaseClient = null;
@@ -311,14 +373,25 @@
             // 尝试从本地存储加载配置
             const savedUrl = localStorage.getItem('supabase_url');
             const savedKey = localStorage.getItem('supabase_key');
+            const savedSiteUrl = localStorage.getItem('site_url');
             
             if (savedUrl && savedKey) {
                 document.getElementById('supabase-url').value = savedUrl;
                 document.getElementById('supabase-key').value = savedKey;
+                if (savedSiteUrl) {
+                    document.getElementById('site-url').value = savedSiteUrl;
+                    updateSolutionUrls(savedSiteUrl);
+                }
                 initSupabase(savedUrl, savedKey);
             } else {
                 showMessage('请先配置 Supabase 连接信息', 'info');
             }
+        }
+        
+        // 更新解决方案中的URL显示
+        function updateSolutionUrls(siteUrl) {
+            document.getElementById('site-url-display').textContent = siteUrl;
+            document.getElementById('redirect-url-display').textContent = siteUrl + '/**';
         }
         
         // 动态加载 Supabase 脚本
@@ -378,6 +451,7 @@
         async function testConnection() {
             const url = document.getElementById('supabase-url').value;
             const key = document.getElementById('supabase-key').value;
+            const siteUrl = document.getElementById('site-url').value;
             
             if (!url || !key) {
                 showMessage('请填写 Supabase URL 和 Anon Key', 'error');
@@ -390,6 +464,10 @@
             // 保存配置
             localStorage.setItem('supabase_url', url);
             localStorage.setItem('supabase_key', key);
+            if (siteUrl) {
+                localStorage.setItem('site_url', siteUrl);
+                updateSolutionUrls(siteUrl);
+            }
             
             // 确保脚本已加载
             if (!scriptLoaded) {
@@ -418,6 +496,11 @@
                     }
                 } else {
                     showMessage('连接成功! 数据库访问正常', 'success');
+                    
+                    // 提醒配置网站URL
+                    if (!siteUrl) {
+                        showMessage('请务必在下方填写您的网站URL，否则邮箱验证将无法工作', 'info');
+                    }
                 }
             } catch (error) {
                 showMessage('连接测试异常: ' + error.message, 'error');
@@ -437,8 +520,11 @@
             showMessage('注册中...', 'info');
             
             try {
+                // 获取网站URL
+                const siteUrl = document.getElementById('site-url').value;
+                
                 // 1. 注册认证用户
-                const { data, error } = await supabaseClient.auth.signUp({
+                const signUpOptions = {
                     email: email,
                     password: password,
                     options: {
@@ -446,7 +532,14 @@
                             username: username
                         }
                     }
-                });
+                };
+                
+                // 如果提供了网站URL，添加重定向配置
+                if (siteUrl) {
+                    signUpOptions.options.redirectTo = siteUrl;
+                }
+                
+                const { data, error } = await supabaseClient.auth.signUp(signUpOptions);
                 
                 if (error) {
                     let errorMessage = error.message;
@@ -467,12 +560,21 @@
                 }
                 
                 if (data.user) {
-                    showMessage(`
-                        <h3>🎉 注册成功!</h3>
-                        <p>我们已向 <strong>${email}</strong> 发送了验证邮件。</p>
-                        <p>请检查您的邮箱并点击验证链接。</p>
-                        <p>验证后即可登录使用。</p>
-                    `, 'success');
+                    if (data.user.identities && data.user.identities.length === 0) {
+                        showMessage(`
+                            <h3>⚠️ 用户可能已存在</h3>
+                            <p>该邮箱可能已经注册过，请尝试直接登录。</p>
+                            <p>如果无法登录，请尝试使用"忘记密码"功能。</p>
+                        `, 'info');
+                    } else {
+                        showMessage(`
+                            <h3>🎉 注册成功!</h3>
+                            <p>我们已向 <strong>${email}</strong> 发送了验证邮件。</p>
+                            <p>请检查您的邮箱并点击验证链接。</p>
+                            <p>验证后即可登录使用。</p>
+                            ${siteUrl ? `<p><small>验证链接将重定向到: ${siteUrl}</small></p>` : ''}
+                        `, 'success');
+                    }
                     
                     // 清空表单
                     document.getElementById('register-form').reset();
@@ -508,6 +610,12 @@
             
             // 测试连接按钮
             document.getElementById('test-connection').addEventListener('click', testConnection);
+            
+            // 网站URL输入变化
+            document.getElementById('site-url').addEventListener('input', function() {
+                localStorage.setItem('site_url', this.value);
+                updateSolutionUrls(this.value);
+            });
             
             // 注册表单提交
             document.getElementById('register-form').addEventListener('submit', async function(e) {
