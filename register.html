@@ -23,7 +23,7 @@
         
         .container {
             width: 100%;
-            max-width: 450px;
+            max-width: 500px;
         }
         
         .logo {
@@ -182,6 +182,29 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        
+        .troubleshoot {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .troubleshoot h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .troubleshoot ul {
+            padding-left: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .troubleshoot li {
+            margin-bottom: 5px;
+        }
     </style>
 </head>
 <body>
@@ -236,15 +259,25 @@
                 
                 <button class="test-btn" id="test-connection">测试连接</button>
             </div>
+            
+            <div class="troubleshoot">
+                <h4>故障排除</h4>
+                <ul>
+                    <li>确保 Supabase URL 和 Key 正确无误</li>
+                    <li>检查网络连接是否正常</li>
+                    <li>尝试刷新页面重新加载</li>
+                    <li>如果问题持续，请尝试使用其他浏览器</li>
+                </ul>
+                <button id="load-script-btn" style="background: #fd7e14; margin-top: 10px;">手动加载 Supabase 库</button>
+            </div>
         </div>
     </div>
 
-    <!-- 使用更可靠的 Supabase CDN -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2.38.0/dist/umd/supabase.min.js"></script>
     <script>
         // 配置状态
         let supabaseClient = null;
         let isConfigured = false;
+        let scriptLoaded = false;
         
         // 显示消息
         function showMessage(message, type) {
@@ -288,6 +321,33 @@
             }
         }
         
+        // 动态加载 Supabase 脚本
+        function loadSupabaseScript() {
+            return new Promise((resolve, reject) => {
+                // 检查是否已加载
+                if (typeof window.supabase !== 'undefined') {
+                    scriptLoaded = true;
+                    resolve();
+                    return;
+                }
+                
+                // 创建脚本元素
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.0/dist/umd/supabase.min.js';
+                script.onload = () => {
+                    scriptLoaded = true;
+                    showMessage('Supabase 库加载成功!', 'success');
+                    resolve();
+                };
+                script.onerror = () => {
+                    showMessage('Supabase 库加载失败，请检查网络连接', 'error');
+                    reject(new Error('Failed to load Supabase script'));
+                };
+                
+                document.head.appendChild(script);
+            });
+        }
+        
         // 初始化 Supabase 客户端
         function initSupabase(url, key) {
             if (!url || !key) {
@@ -298,7 +358,7 @@
             try {
                 // 检查 Supabase 库是否已加载
                 if (typeof window.supabase === 'undefined') {
-                    showMessage('Supabase 库加载失败，请刷新页面重试', 'error');
+                    showMessage('Supabase 库未加载，请先手动加载', 'error');
                     return false;
                 }
                 
@@ -330,6 +390,16 @@
             // 保存配置
             localStorage.setItem('supabase_url', url);
             localStorage.setItem('supabase_key', key);
+            
+            // 确保脚本已加载
+            if (!scriptLoaded) {
+                try {
+                    await loadSupabaseScript();
+                } catch (error) {
+                    setLoading(false);
+                    return;
+                }
+            }
             
             if (!initSupabase(url, key)) {
                 setLoading(false);
@@ -422,13 +492,19 @@
         
         // 事件监听
         document.addEventListener('DOMContentLoaded', function() {
-            // 检查 Supabase 库是否已加载
-            if (typeof window.supabase === 'undefined') {
-                showMessage('警告: Supabase 库未正确加载，请刷新页面重试', 'error');
-            }
-            
             // 初始化配置
             initConfig();
+            
+            // 手动加载脚本按钮
+            document.getElementById('load-script-btn').addEventListener('click', async function() {
+                setLoading(true);
+                try {
+                    await loadSupabaseScript();
+                } catch (error) {
+                    // 错误已在loadSupabaseScript中处理
+                }
+                setLoading(false);
+            });
             
             // 测试连接按钮
             document.getElementById('test-connection').addEventListener('click', testConnection);
@@ -450,6 +526,15 @@
                 if (password.length < 6) {
                     showMessage('密码至少需要6位字符', 'error');
                     return;
+                }
+                
+                // 确保脚本已加载
+                if (!scriptLoaded) {
+                    try {
+                        await loadSupabaseScript();
+                    } catch (error) {
+                        return;
+                    }
                 }
                 
                 // 注册用户
