@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>处理验证 - 在线剪贴板</title>
+    <title>验证成功 - 在线剪贴板</title>
     <style>
         * {
             margin: 0;
@@ -78,12 +78,6 @@
             background: #d1ecf1;
             color: #0c5460;
             border: 1px solid #bee5eb;
-        }
-        
-        .warning {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
         }
         
         .loading {
@@ -185,26 +179,57 @@
             margin-bottom: 15px;
             color: #495057;
         }
+        
+        .config-form {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .config-form h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .config-input {
+            margin-bottom: 10px;
+        }
+        
+        .config-input label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #856404;
+        }
+        
+        .config-input input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="card">
             <div class="logo">📋</div>
-            <h1>邮箱验证处理</h1>
+            <h1>邮箱验证成功</h1>
             
             <div id="loading-section">
                 <div class="loading"></div>
-                <h2>正在验证您的邮箱...</h2>
-                <p>请稍候，我们正在处理您的验证请求。</p>
+                <h2>正在完成验证...</h2>
+                <p>我们正在处理您的验证请求，请稍候。</p>
                 
                 <div class="step">
                     <span class="step-number">1</span>
-                    <span>解析验证链接...</span>
+                    <span>解析验证令牌...</span>
                 </div>
                 <div class="step">
                     <span class="step-number">2</span>
-                    <span>验证令牌有效性...</span>
+                    <span>验证用户信息...</span>
                 </div>
                 <div class="step">
                     <span class="step-number">3</span>
@@ -230,38 +255,63 @@
                     <p id="error-details">验证过程中出现问题。</p>
                 </div>
                 
+                <div class="config-form">
+                    <h3>Supabase 配置</h3>
+                    <p>请检查您的 Supabase 配置是否正确：</p>
+                    
+                    <div class="config-input">
+                        <label for="supabase-url">Supabase URL</label>
+                        <input type="text" id="supabase-url" placeholder="https://your-project.supabase.co">
+                    </div>
+                    
+                    <div class="config-input">
+                        <label for="supabase-key">Supabase Anon Key</label>
+                        <input type="text" id="supabase-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+                    </div>
+                    
+                    <button class="btn" id="save-config">保存配置并重试</button>
+                </div>
+                
                 <div class="manual-steps">
                     <h3>手动验证步骤</h3>
                     <div class="step">
                         <span class="step-number">1</span>
-                        <span>复制下方调试信息中的访问令牌</span>
-                    </div>
-                    <div class="step">
-                        <span class="step-number">2</span>
                         <span>打开浏览器开发者工具 (F12)</span>
                     </div>
                     <div class="step">
-                        <span class="step-number">3</span>
+                        <span class="step-number">2</span>
                         <span>在控制台中执行以下命令：</span>
                     </div>
                     <div class="debug-info">
-// 替换为您的实际令牌
+// 手动设置会话
 const accessToken = "您的访问令牌";
 const refreshToken = "您的刷新令牌";
+const supabaseUrl = "您的Supabase URL";
+const supabaseKey = "您的Supabase Key";
 
-// 设置会话
-const { data, error } = await supabase.auth.setSession({
-  access_token: accessToken,
-  refresh_token: refreshToken
-});
-
-// 检查结果
-if (error) {
-  console.error("设置会话失败:", error);
-} else {
-  console.log("设置会话成功:", data);
+// 直接调用Supabase API设置会话
+fetch(`${supabaseUrl}/auth/v1/user`, {
+  method: 'GET',
+  headers: {
+    'Authorization': `Bearer ${accessToken}`,
+    'apikey': supabaseKey
+  }
+})
+.then(response => response.json())
+.then(user => {
+  console.log("用户信息:", user);
+  // 保存用户信息到本地存储
+  localStorage.setItem('supabase_user', JSON.stringify(user));
+  localStorage.setItem('supabase_access_token', accessToken);
+  localStorage.setItem('supabase_refresh_token', refreshToken);
+  
+  alert("验证成功！");
   window.location.href = "dashboard.html";
-}
+})
+.catch(error => {
+  console.error("验证失败:", error);
+  alert("验证失败: " + error.message);
+});
                     </div>
                 </div>
                 
@@ -303,7 +353,7 @@ if (error) {
             // 尝试从hash片段获取参数
             const hash = window.location.hash.substring(1);
             if (hash) {
-                addDebugInfo("从hash片段解析参数: " + hash);
+                addDebugInfo("从hash片段解析参数");
                 const hashParams = new URLSearchParams(hash);
                 for (const [key, value] of hashParams) {
                     params[key] = value;
@@ -313,7 +363,7 @@ if (error) {
             // 尝试从查询字符串获取参数
             const query = window.location.search.substring(1);
             if (query) {
-                addDebugInfo("从查询字符串解析参数: " + query);
+                addDebugInfo("从查询字符串解析参数");
                 const queryParams = new URLSearchParams(query);
                 for (const [key, value] of queryParams) {
                     params[key] = value;
@@ -324,98 +374,64 @@ if (error) {
             return params;
         }
         
-        // 加载Supabase库
-        function loadSupabase() {
-            return new Promise((resolve, reject) => {
-                addDebugInfo("开始加载Supabase库");
-                
-                // 检查是否已加载
-                if (window.supabase) {
-                    addDebugInfo("Supabase库已加载");
-                    resolve(window.supabase);
-                    return;
-                }
-                
-                // 创建脚本元素
-                const script = document.createElement("script");
-                script.src = "https://unpkg.com/@supabase/supabase-js@2.38.0/dist/umd/supabase.min.js";
-                script.onload = () => {
-                    addDebugInfo("Supabase库加载成功");
-                    resolve(window.supabase);
-                };
-                script.onerror = () => {
-                    addDebugInfo("Supabase库加载失败");
-                    reject(new Error("Failed to load Supabase library"));
-                };
-                
-                document.head.appendChild(script);
-            });
-        }
-        
-        // 初始化Supabase客户端
-        function initSupabase() {
-            addDebugInfo("初始化Supabase客户端");
+        // 获取Supabase配置
+        function getSupabaseConfig() {
+            const url = localStorage.getItem("supabase_url") || document.getElementById("supabase-url").value;
+            const key = localStorage.getItem("supabase_key") || document.getElementById("supabase-key").value;
             
-            // 从本地存储获取配置或使用默认值
-            const supabaseUrl = localStorage.getItem("supabase_url") || "https://qxdravwmyllgkikbloza.supabase.co";
-            const supabaseKey = localStorage.getItem("supabase_key") || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4ZHJhdndteWxsZ2tpa2Jsb3phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwMDk1NDksImV4cCI6MjA3NjU4NTU0OX0.p6kKj-ILhfjw1WG203fBYKxg2hFh4bOfp4CPsh6B7Jw";
-            
-            addDebugInfo("Supabase URL: " + supabaseUrl);
-            
-            // 检查配置是否正确
-            if (supabaseUrl.includes("https://qxdravwmyllgkikbloza.supabase.co") || supabaseKey.includes("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4ZHJhdndteWxsZ2tpa2Jsb3phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwMDk1NDksImV4cCI6MjA3NjU4NTU0OX0.p6kKj-ILhfjw1WG203fBYKxg2hFh4bOfp4CPsh6B7Jw")) {
-                addDebugInfo("Supabase配置不正确，使用默认值");
+            // 如果配置输入框有值，更新本地存储
+            if (document.getElementById("supabase-url").value) {
+                localStorage.setItem("supabase_url", document.getElementById("supabase-url").value);
+            }
+            if (document.getElementById("supabase-key").value) {
+                localStorage.setItem("supabase_key", document.getElementById("supabase-key").value);
             }
             
-            try {
-                const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-                addDebugInfo("Supabase客户端初始化成功");
-                return supabaseClient;
-            } catch (error) {
-                addDebugInfo("Supabase客户端初始化失败: " + error.message);
-                throw error;
-            }
+            return { url, key };
         }
         
-        // 设置用户会话
-        async function setUserSession(supabaseClient, accessToken, refreshToken) {
-            addDebugInfo("开始设置用户会话");
+        // 直接使用Supabase API验证用户
+        async function verifyUserDirectly(accessToken, refreshToken) {
+            addDebugInfo("开始直接验证用户");
+            
+            const config = getSupabaseConfig();
+            
+            if (!config.url || config.url.includes("your-project")) {
+                throw new Error("请配置正确的 Supabase URL");
+            }
+            
+            if (!config.key || config.key.includes("your-anon-key")) {
+                throw new Error("请配置正确的 Supabase Key");
+            }
+            
+            addDebugInfo("使用 Supabase URL: " + config.url);
             
             try {
-                const { data, error } = await supabaseClient.auth.setSession({
-                    access_token: accessToken,
-                    refresh_token: refreshToken
+                // 使用访问令牌获取用户信息
+                const response = await fetch(`${config.url}/auth/v1/user`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'apikey': config.key
+                    }
                 });
                 
-                if (error) {
-                    addDebugInfo("设置会话失败: " + error.message);
-                    throw error;
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
                 }
                 
-                addDebugInfo("设置会话成功");
-                return data;
-            } catch (error) {
-                addDebugInfo("设置会话异常: " + error.message);
-                throw error;
-            }
-        }
-        
-        // 获取用户信息
-        async function getUserInfo(supabaseClient) {
-            addDebugInfo("开始获取用户信息");
-            
-            try {
-                const { data, error } = await supabaseClient.auth.getUser();
+                const user = await response.json();
+                addDebugInfo("用户信息获取成功: " + user.email);
                 
-                if (error) {
-                    addDebugInfo("获取用户信息失败: " + error.message);
-                    throw error;
-                }
+                // 保存用户信息和令牌到本地存储
+                localStorage.setItem('supabase_user', JSON.stringify(user));
+                localStorage.setItem('supabase_access_token', accessToken);
+                localStorage.setItem('supabase_refresh_token', refreshToken);
                 
-                addDebugInfo("获取用户信息成功: " + data.user.email);
-                return data;
+                return user;
             } catch (error) {
-                addDebugInfo("获取用户信息异常: " + error.message);
+                addDebugInfo("直接验证失败: " + error.message);
                 throw error;
             }
         }
@@ -428,6 +444,12 @@ if (error) {
             const successSection = document.getElementById("success-section");
             const errorSection = document.getElementById("error-section");
             const errorDetails = document.getElementById("error-details");
+            
+            // 加载保存的配置到表单
+            const savedUrl = localStorage.getItem("supabase_url");
+            const savedKey = localStorage.getItem("supabase_key");
+            if (savedUrl) document.getElementById("supabase-url").value = savedUrl;
+            if (savedKey) document.getElementById("supabase-key").value = savedKey;
             
             try {
                 // 1. 获取URL参数
@@ -444,23 +466,19 @@ if (error) {
                 
                 addDebugInfo("找到必要参数: access_token, refresh_token");
                 
-                // 2. 加载Supabase库
-                await loadSupabase();
+                // 2. 直接使用Supabase API验证用户
+                const user = await verifyUserDirectly(params.access_token, params.refresh_token);
                 
-                // 3. 初始化Supabase客户端
-                const supabaseClient = initSupabase();
-                
-                // 4. 设置用户会话
-                await setUserSession(supabaseClient, params.access_token, params.refresh_token);
-                
-                // 5. 获取用户信息验证会话
-                const userData = await getUserInfo(supabaseClient);
-                
-                // 6. 显示成功页面
+                // 3. 显示成功页面
                 loadingSection.classList.add("hidden");
                 successSection.classList.remove("hidden");
                 
                 addDebugInfo("验证流程完成，显示成功页面");
+                
+                // 4. 3秒后自动跳转到仪表板
+                setTimeout(() => {
+                    window.location.href = "dashboard.html";
+                }, 3000);
                 
             } catch (error) {
                 console.error("验证回调处理失败:", error);
@@ -478,12 +496,33 @@ if (error) {
                     errorMessage = "刷新令牌无效，请重新注册";
                 } else if (error.message.includes("Auth session missing")) {
                     errorMessage = "认证会话丢失，请重新验证";
+                } else if (error.message.includes("请配置正确的")) {
+                    errorMessage = error.message;
                 }
                 
                 errorDetails.textContent = errorMessage;
                 addDebugInfo("验证流程失败: " + error.message);
             }
         }
+        
+        // 保存配置并重试
+        document.getElementById("save-config").addEventListener("click", function() {
+            const url = document.getElementById("supabase-url").value;
+            const key = document.getElementById("supabase-key").value;
+            
+            if (!url || !key) {
+                alert("请填写 Supabase URL 和 Key");
+                return;
+            }
+            
+            localStorage.setItem("supabase_url", url);
+            localStorage.setItem("supabase_key", key);
+            
+            document.getElementById("error-section").classList.add("hidden");
+            document.getElementById("loading-section").classList.remove("hidden");
+            
+            handleAuthCallback();
+        });
         
         // 重试按钮事件
         document.getElementById("retry-btn").addEventListener("click", function() {
