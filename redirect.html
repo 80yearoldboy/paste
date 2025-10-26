@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>邮箱验证 - 在线剪贴板</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+        
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        p {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            background: #5a6fd8;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .troubleshoot {
+            margin-top: 30px;
+            padding: 15px;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            text-align: left;
+        }
+        
+        .troubleshoot h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .troubleshoot ul {
+            padding-left: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .troubleshoot li {
+            margin-bottom: 8px;
+        }
+        
+        .code {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="logo">📋</div>
+            <h1>邮箱验证</h1>
+            <p>正在验证您的邮箱地址，请稍候...</p>
+            
+            <div class="loading" id="loading"></div>
+            
+            <div id="success-message" class="hidden">
+                <div class="status success">
+                    <h2>🎉 验证成功！</h2>
+                    <p>您的邮箱地址已验证成功。</p>
+                </div>
+                <a href="login.html" class="btn">立即登录</a>
+            </div>
+            
+            <div id="error-message" class="hidden">
+                <div class="status error">
+                    <h2>❌ 验证失败</h2>
+                    <p id="error-details">验证链接无效或已过期。</p>
+                </div>
+                <a href="register.html" class="btn">重新注册</a>
+                <a href="login.html" class="btn" style="background: #6c757d;">尝试登录</a>
+            </div>
+            
+            <div class="troubleshoot">
+                <h3>遇到问题？</h3>
+                <ul>
+                    <li>验证链接通常在24小时后过期</li>
+                    <li>请确保点击的是最新的验证邮件</li>
+                    <li>如果问题持续，请尝试重新注册</li>
+                    <li>检查您的垃圾邮件文件夹</li>
+                </ul>
+                <p>如果验证失败，您可能需要检查 Supabase 配置：</p>
+                <div class="code">
+                    Site URL: https://yourusername.github.io/your-repo-name<br>
+                    Redirect URLs: https://yourusername.github.io/your-repo-name/**
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/@supabase/supabase-js@2.38.0/dist/umd/supabase.min.js"></script>
+    <script>
+        // 初始化 Supabase
+        const supabaseUrl = localStorage.getItem('supabase_url') || 'https://your-project.supabase.co';
+        const supabaseKey = localStorage.getItem('supabase_key') || 'your-anon-key';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // 获取URL参数
+        function getParameterByName(name) {
+            const url = window.location.href;
+            name = name.replace(/[\[\]]/g, '\\$&');
+            const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
+            const results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        }
+        
+        // 处理验证回调
+        async function handleAuthCallback() {
+            const loadingEl = document.getElementById('loading');
+            const successEl = document.getElementById('success-message');
+            const errorEl = document.getElementById('error-message');
+            const errorDetailsEl = document.getElementById('error-details');
+            
+            try {
+                // 获取URL中的token和type参数
+                const token = getParameterByName('token');
+                const type = getParameterByName('type');
+                
+                if (!token || !type) {
+                    throw new Error('验证链接缺少必要参数');
+                }
+                
+                // 使用Supabase验证邮箱
+                const { data, error } = await supabase.auth.verifyOtp({
+                    token_hash: token,
+                    type: type
+                });
+                
+                if (error) {
+                    throw error;
+                }
+                
+                if (data && data.user) {
+                    // 验证成功
+                    loadingEl.style.display = 'none';
+                    successEl.classList.remove('hidden');
+                    
+                    // 可选：自动登录用户
+                    // const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+                    // if (!sessionError && sessionData.session) {
+                    //     // 用户已自动登录，可以跳转到仪表板
+                    //     setTimeout(() => {
+                    //         window.location.href = 'dashboard.html';
+                    //     }, 2000);
+                    // }
+                } else {
+                    throw new Error('验证失败，请重试');
+                }
+            } catch (error) {
+                console.error('验证错误:', error);
+                loadingEl.style.display = 'none';
+                errorEl.classList.remove('hidden');
+                
+                // 提供更友好的错误信息
+                let errorMessage = '验证链接无效或已过期。';
+                if (error.message.includes('token has expired')) {
+                    errorMessage = '验证链接已过期，请重新请求验证邮件。';
+                } else if (error.message.includes('invalid token')) {
+                    errorMessage = '验证链接无效，请检查是否正确复制了完整链接。';
+                } else if (error.message.includes('Email link is invalid')) {
+                    errorMessage = '验证链接无效，可能是配置错误或链接已被使用。';
+                }
+                
+                errorDetailsEl.textContent = errorMessage;
+            }
+        }
+        
+        // 页面加载完成后开始验证
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查Supabase是否配置正确
+            if (supabaseUrl.includes('your-project') || supabaseKey.includes('your-anon-key')) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error-message').classList.remove('hidden');
+                document.getElementById('error-details').textContent = 
+                    'Supabase 配置不正确。请确保在注册页面正确配置了 Supabase URL 和 Key。';
+                return;
+            }
+            
+            handleAuthCallback();
+        });
+    </script>
+</body>
+</html>
