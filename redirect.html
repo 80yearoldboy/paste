@@ -63,10 +63,10 @@
             border: 1px solid #c3e6cb;
         }
         
-        .error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
         }
         
         .loading {
@@ -93,41 +93,55 @@
             border-radius: 8px;
             font-weight: 600;
             transition: background 0.3s;
-            margin-top: 10px;
+            margin: 5px;
         }
         
         .btn:hover {
             background: #5a6fd8;
         }
         
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
         .hidden {
             display: none;
         }
         
-        .troubleshoot {
-            margin-top: 30px;
+        .user-info {
+            background: #f8f9fa;
             padding: 15px;
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
             border-radius: 8px;
+            margin: 20px 0;
             text-align: left;
         }
         
-        .troubleshoot h3 {
-            color: #856404;
+        .user-info h3 {
             margin-bottom: 10px;
+            color: #495057;
         }
         
-        .troubleshoot ul {
-            padding-left: 20px;
-            margin-bottom: 10px;
+        .user-detail {
+            margin-bottom: 5px;
+            display: flex;
         }
         
-        .troubleshoot li {
-            margin-bottom: 8px;
+        .user-detail label {
+            font-weight: 600;
+            min-width: 100px;
         }
         
-        .code {
+        .countdown {
+            font-size: 14px;
+            color: #6c757d;
+            margin-top: 10px;
+        }
+        
+        .token-preview {
             background: #f8f9fa;
             padding: 10px;
             border-radius: 5px;
@@ -135,6 +149,9 @@
             font-size: 12px;
             overflow-x: auto;
             margin: 10px 0;
+            text-align: left;
+            max-height: 100px;
+            overflow-y: auto;
         }
     </style>
 </head>
@@ -142,41 +159,64 @@
     <div class="container">
         <div class="card">
             <div class="logo">📋</div>
-            <h1>邮箱验证</h1>
-            <p>正在验证您的邮箱地址，请稍候...</p>
+            <h1>邮箱验证成功</h1>
+            <p>我们正在为您完成注册流程...</p>
             
             <div class="loading" id="loading"></div>
             
-            <div id="success-message" class="hidden">
+            <div id="success-content" class="hidden">
                 <div class="status success">
-                    <h2>🎉 验证成功！</h2>
-                    <p>您的邮箱地址已验证成功。</p>
+                    <h2>🎉 恭喜！</h2>
+                    <p>您的邮箱已验证成功，账户已激活。</p>
                 </div>
-                <a href="login.html" class="btn">立即登录</a>
+                
+                <div class="user-info">
+                    <h3>账户信息</h3>
+                    <div class="user-detail">
+                        <label>邮箱:</label>
+                        <span id="user-email">447376177@qq.com</span>
+                    </div>
+                    <div class="user-detail">
+                        <label>用户名:</label>
+                        <span id="user-name">80yearoldboy</span>
+                    </div>
+                    <div class="user-detail">
+                        <label>状态:</label>
+                        <span id="user-status">已验证</span>
+                    </div>
+                </div>
+                
+                <div class="status info">
+                    <h3>下一步</h3>
+                    <p>您现在可以登录并使用在线剪贴板的所有功能。</p>
+                </div>
+                
+                <div>
+                    <a href="dashboard.html" class="btn" id="dashboard-btn">进入剪贴板</a>
+                    <a href="index.html" class="btn btn-secondary">返回首页</a>
+                </div>
+                
+                <p class="countdown" id="countdown">5秒后自动跳转到剪贴板...</p>
             </div>
             
             <div id="error-message" class="hidden">
                 <div class="status error">
-                    <h2>❌ 验证失败</h2>
-                    <p id="error-details">验证链接无效或已过期。</p>
+                    <h2>❌ 处理失败</h2>
+                    <p id="error-details">处理验证信息时出现问题。</p>
                 </div>
                 <a href="register.html" class="btn">重新注册</a>
-                <a href="login.html" class="btn" style="background: #6c757d;">尝试登录</a>
+                <a href="login.html" class="btn btn-secondary">尝试登录</a>
             </div>
             
-            <div class="troubleshoot">
-                <h3>遇到问题？</h3>
-                <ul>
-                    <li>验证链接通常在24小时后过期</li>
-                    <li>请确保点击的是最新的验证邮件</li>
-                    <li>如果问题持续，请尝试重新注册</li>
-                    <li>检查您的垃圾邮件文件夹</li>
-                </ul>
-                <p>如果验证失败，您可能需要检查 Supabase 配置：</p>
-                <div class="code">
-                    Site URL: https://yourusername.github.io/your-repo-name<br>
-                    Redirect URLs: https://yourusername.github.io/your-repo-name/**
-                </div>
+            <div style="margin-top: 30px; text-align: left;">
+                <details>
+                    <summary style="cursor: pointer; font-weight: 600;">调试信息</summary>
+                    <div style="margin-top: 10px;">
+                        <p>接收到的令牌信息：</p>
+                        <div class="token-preview" id="token-preview"></div>
+                        <button class="btn btn-secondary" id="copy-token" style="font-size: 12px; padding: 5px 10px;">复制令牌</button>
+                    </div>
+                </details>
             </div>
         </div>
     </div>
@@ -189,36 +229,45 @@
         const supabase = supabase.createClient(supabaseUrl, supabaseKey);
         
         // 获取URL参数
-        function getParameterByName(name) {
-            const url = window.location.href;
-            name = name.replace(/[\[\]]/g, '\\$&');
-            const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
-            const results = regex.exec(url);
-            if (!results) return null;
-            if (!results[2]) return '';
-            return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        function getUrlParameters() {
+            const params = {};
+            const queryString = window.location.hash.substring(1) || window.location.search.substring(1);
+            const regex = /([^&=]+)=([^&]*)/g;
+            let m;
+            
+            while (m = regex.exec(queryString)) {
+                params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
+            }
+            
+            return params;
         }
         
-        // 处理验证回调
-        async function handleAuthCallback() {
+        // 处理成功回调
+        async function handleSuccessCallback() {
             const loadingEl = document.getElementById('loading');
-            const successEl = document.getElementById('success-message');
+            const successEl = document.getElementById('success-content');
             const errorEl = document.getElementById('error-message');
             const errorDetailsEl = document.getElementById('error-details');
+            const tokenPreviewEl = document.getElementById('token-preview');
             
             try {
-                // 获取URL中的token和type参数
-                const token = getParameterByName('token');
-                const type = getParameterByName('type');
+                // 获取URL参数
+                const params = getUrlParameters();
                 
-                if (!token || !type) {
-                    throw new Error('验证链接缺少必要参数');
+                // 显示令牌预览（前50个字符）
+                if (params.access_token) {
+                    tokenPreviewEl.textContent = params.access_token.substring(0, 50) + '...';
                 }
                 
-                // 使用Supabase验证邮箱
-                const { data, error } = await supabase.auth.verifyOtp({
-                    token_hash: token,
-                    type: type
+                // 检查必要的参数
+                if (!params.access_token) {
+                    throw new Error('回调URL中缺少访问令牌');
+                }
+                
+                // 使用Supabase设置会话
+                const { data, error } = await supabase.auth.setSession({
+                    access_token: params.access_token,
+                    refresh_token: params.refresh_token
                 });
                 
                 if (error) {
@@ -226,41 +275,73 @@
                 }
                 
                 if (data && data.user) {
-                    // 验证成功
+                    // 验证成功，更新用户信息
+                    document.getElementById('user-email').textContent = data.user.email;
+                    if (data.user.user_metadata && data.user.user_metadata.username) {
+                        document.getElementById('user-name').textContent = data.user.user_metadata.username;
+                    }
+                    
+                    // 显示成功内容
                     loadingEl.style.display = 'none';
                     successEl.classList.remove('hidden');
                     
-                    // 可选：自动登录用户
-                    // const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-                    // if (!sessionError && sessionData.session) {
-                    //     // 用户已自动登录，可以跳转到仪表板
-                    //     setTimeout(() => {
-                    //         window.location.href = 'dashboard.html';
-                    //     }, 2000);
-                    // }
+                    // 开始倒计时
+                    startCountdown();
                 } else {
-                    throw new Error('验证失败，请重试');
+                    throw new Error('无法获取用户信息');
                 }
             } catch (error) {
-                console.error('验证错误:', error);
+                console.error('处理回调错误:', error);
                 loadingEl.style.display = 'none';
                 errorEl.classList.remove('hidden');
                 
                 // 提供更友好的错误信息
-                let errorMessage = '验证链接无效或已过期。';
-                if (error.message.includes('token has expired')) {
-                    errorMessage = '验证链接已过期，请重新请求验证邮件。';
-                } else if (error.message.includes('invalid token')) {
-                    errorMessage = '验证链接无效，请检查是否正确复制了完整链接。';
-                } else if (error.message.includes('Email link is invalid')) {
-                    errorMessage = '验证链接无效，可能是配置错误或链接已被使用。';
+                let errorMessage = '处理验证信息时出现问题。';
+                if (error.message.includes('Invalid Refresh Token')) {
+                    errorMessage = '刷新令牌无效，请重新登录。';
+                } else if (error.message.includes('Auth session missing')) {
+                    errorMessage = '认证会话丢失，请重新验证。';
                 }
                 
                 errorDetailsEl.textContent = errorMessage;
             }
         }
         
-        // 页面加载完成后开始验证
+        // 倒计时并自动跳转
+        function startCountdown() {
+            let countdown = 5;
+            const countdownEl = document.getElementById('countdown');
+            const dashboardBtn = document.getElementById('dashboard-btn');
+            
+            const countdownInterval = setInterval(() => {
+                countdown--;
+                countdownEl.textContent = `${countdown}秒后自动跳转到剪贴板...`;
+                
+                if (countdown <= 0) {
+                    clearInterval(countdownInterval);
+                    window.location.href = 'dashboard.html';
+                }
+            }, 1000);
+            
+            // 点击按钮立即跳转
+            dashboardBtn.addEventListener('click', () => {
+                clearInterval(countdownInterval);
+            });
+        }
+        
+        // 复制令牌功能
+        document.getElementById('copy-token').addEventListener('click', function() {
+            const params = getUrlParameters();
+            if (params.access_token) {
+                navigator.clipboard.writeText(params.access_token).then(() => {
+                    alert('令牌已复制到剪贴板');
+                }).catch(err => {
+                    console.error('复制失败:', err);
+                });
+            }
+        });
+        
+        // 页面加载完成后开始处理
         document.addEventListener('DOMContentLoaded', function() {
             // 检查Supabase是否配置正确
             if (supabaseUrl.includes('your-project') || supabaseKey.includes('your-anon-key')) {
@@ -271,7 +352,7 @@
                 return;
             }
             
-            handleAuthCallback();
+            handleSuccessCallback();
         });
     </script>
 </body>
