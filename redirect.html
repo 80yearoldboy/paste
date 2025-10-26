@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>邮箱验证 - 在线剪贴板</title>
+    <title>处理验证 - 在线剪贴板</title>
     <style>
         * {
             margin: 0;
@@ -23,7 +23,7 @@
         
         .container {
             width: 100%;
-            max-width: 500px;
+            max-width: 600px;
             text-align: center;
         }
         
@@ -42,6 +42,11 @@
         h1 {
             color: #333;
             margin-bottom: 10px;
+        }
+        
+        h2 {
+            color: #555;
+            margin-bottom: 20px;
         }
         
         p {
@@ -63,17 +68,29 @@
             border: 1px solid #c3e6cb;
         }
         
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
         .info {
             background: #d1ecf1;
             color: #0c5460;
             border: 1px solid #bee5eb;
         }
         
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
         .loading {
             display: inline-block;
-            width: 30px;
-            height: 30px;
-            border: 3px solid rgba(102, 126, 234, 0.3);
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(102, 126, 234, 0.3);
             border-radius: 50%;
             border-top-color: #667eea;
             animation: spin 1s ease-in-out infinite;
@@ -94,6 +111,9 @@
             font-weight: 600;
             transition: background 0.3s;
             margin: 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
         }
         
         .btn:hover {
@@ -112,7 +132,7 @@
             display: none;
         }
         
-        .user-info {
+        .debug-panel {
             background: #f8f9fa;
             padding: 15px;
             border-radius: 8px;
@@ -120,38 +140,50 @@
             text-align: left;
         }
         
-        .user-info h3 {
+        .debug-panel h3 {
             margin-bottom: 10px;
             color: #495057;
         }
         
-        .user-detail {
-            margin-bottom: 5px;
-            display: flex;
-        }
-        
-        .user-detail label {
-            font-weight: 600;
-            min-width: 100px;
-        }
-        
-        .countdown {
-            font-size: 14px;
-            color: #6c757d;
-            margin-top: 10px;
-        }
-        
-        .token-preview {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
+        .debug-info {
             font-family: monospace;
             font-size: 12px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
             overflow-x: auto;
-            margin: 10px 0;
-            text-align: left;
-            max-height: 100px;
+            max-height: 200px;
             overflow-y: auto;
+        }
+        
+        .step {
+            margin: 15px 0;
+            padding: 10px;
+            border-left: 4px solid #667eea;
+            background: #f8f9fa;
+            text-align: left;
+        }
+        
+        .step-number {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            margin-right: 10px;
+        }
+        
+        .manual-steps {
+            text-align: left;
+            margin-top: 30px;
+        }
+        
+        .manual-steps h3 {
+            margin-bottom: 15px;
+            color: #495057;
         }
     </style>
 </head>
@@ -159,200 +191,311 @@
     <div class="container">
         <div class="card">
             <div class="logo">📋</div>
-            <h1>邮箱验证成功</h1>
-            <p>我们正在为您完成注册流程...</p>
+            <h1>邮箱验证处理</h1>
             
-            <div class="loading" id="loading"></div>
+            <div id="loading-section">
+                <div class="loading"></div>
+                <h2>正在验证您的邮箱...</h2>
+                <p>请稍候，我们正在处理您的验证请求。</p>
+                
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <span>解析验证链接...</span>
+                </div>
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <span>验证令牌有效性...</span>
+                </div>
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <span>创建用户会话...</span>
+                </div>
+            </div>
             
-            <div id="success-content" class="hidden">
+            <div id="success-section" class="hidden">
                 <div class="status success">
-                    <h2>🎉 恭喜！</h2>
-                    <p>您的邮箱已验证成功，账户已激活。</p>
-                </div>
-                
-                <div class="user-info">
-                    <h3>账户信息</h3>
-                    <div class="user-detail">
-                        <label>邮箱:</label>
-                        <span id="user-email">447376177@qq.com</span>
-                    </div>
-                    <div class="user-detail">
-                        <label>用户名:</label>
-                        <span id="user-name">80yearoldboy</span>
-                    </div>
-                    <div class="user-detail">
-                        <label>状态:</label>
-                        <span id="user-status">已验证</span>
-                    </div>
-                </div>
-                
-                <div class="status info">
-                    <h3>下一步</h3>
-                    <p>您现在可以登录并使用在线剪贴板的所有功能。</p>
+                    <h2>🎉 验证成功！</h2>
+                    <p>您的邮箱已验证成功，现在可以登录使用在线剪贴板。</p>
                 </div>
                 
                 <div>
                     <a href="dashboard.html" class="btn" id="dashboard-btn">进入剪贴板</a>
                     <a href="index.html" class="btn btn-secondary">返回首页</a>
                 </div>
-                
-                <p class="countdown" id="countdown">5秒后自动跳转到剪贴板...</p>
             </div>
             
-            <div id="error-message" class="hidden">
+            <div id="error-section" class="hidden">
                 <div class="status error">
-                    <h2>❌ 处理失败</h2>
-                    <p id="error-details">处理验证信息时出现问题。</p>
+                    <h2>❌ 验证失败</h2>
+                    <p id="error-details">验证过程中出现问题。</p>
                 </div>
-                <a href="register.html" class="btn">重新注册</a>
-                <a href="login.html" class="btn btn-secondary">尝试登录</a>
+                
+                <div class="manual-steps">
+                    <h3>手动验证步骤</h3>
+                    <div class="step">
+                        <span class="step-number">1</span>
+                        <span>复制下方调试信息中的访问令牌</span>
+                    </div>
+                    <div class="step">
+                        <span class="step-number">2</span>
+                        <span>打开浏览器开发者工具 (F12)</span>
+                    </div>
+                    <div class="step">
+                        <span class="step-number">3</span>
+                        <span>在控制台中执行以下命令：</span>
+                    </div>
+                    <div class="debug-info">
+// 替换为您的实际令牌
+const accessToken = "您的访问令牌";
+const refreshToken = "您的刷新令牌";
+
+// 设置会话
+const { data, error } = await supabase.auth.setSession({
+  access_token: accessToken,
+  refresh_token: refreshToken
+});
+
+// 检查结果
+if (error) {
+  console.error("设置会话失败:", error);
+} else {
+  console.log("设置会话成功:", data);
+  window.location.href = "dashboard.html";
+}
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <button class="btn" id="retry-btn">重试验证</button>
+                    <a href="register.html" class="btn btn-secondary">重新注册</a>
+                </div>
             </div>
             
-            <div style="margin-top: 30px; text-align: left;">
-                <details>
-                    <summary style="cursor: pointer; font-weight: 600;">调试信息</summary>
-                    <div style="margin-top: 10px;">
-                        <p>接收到的令牌信息：</p>
-                        <div class="token-preview" id="token-preview"></div>
-                        <button class="btn btn-secondary" id="copy-token" style="font-size: 12px; padding: 5px 10px;">复制令牌</button>
-                    </div>
-                </details>
+            <div class="debug-panel">
+                <h3>调试信息 <button class="btn" id="toggle-debug" style="font-size: 12px; padding: 5px 10px;">显示/隐藏</button></h3>
+                <div id="debug-info" class="debug-info hidden"></div>
             </div>
         </div>
     </div>
 
-    <script src="https://unpkg.com/@supabase/supabase-js@2.38.0/dist/umd/supabase.min.js"></script>
     <script>
-        // 初始化 Supabase
-        const supabaseUrl = localStorage.getItem('supabase_url') || 'https://your-project.supabase.co';
-        const supabaseKey = localStorage.getItem('supabase_key') || 'your-anon-key';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        // 调试信息
+        let debugInfo = "";
+        
+        // 添加调试信息
+        function addDebugInfo(message) {
+            debugInfo += new Date().toLocaleTimeString() + ": " + message + "\n";
+            document.getElementById("debug-info").textContent = debugInfo;
+        }
+        
+        // 切换调试信息显示
+        document.getElementById("toggle-debug").addEventListener("click", function() {
+            const debugEl = document.getElementById("debug-info");
+            debugEl.classList.toggle("hidden");
+        });
         
         // 获取URL参数
         function getUrlParameters() {
-            const params = {};
-            const queryString = window.location.hash.substring(1) || window.location.search.substring(1);
-            const regex = /([^&=]+)=([^&]*)/g;
-            let m;
+            addDebugInfo("开始解析URL参数");
             
-            while (m = regex.exec(queryString)) {
-                params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
+            const params = {};
+            
+            // 尝试从hash片段获取参数
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                addDebugInfo("从hash片段解析参数: " + hash);
+                const hashParams = new URLSearchParams(hash);
+                for (const [key, value] of hashParams) {
+                    params[key] = value;
+                }
             }
             
+            // 尝试从查询字符串获取参数
+            const query = window.location.search.substring(1);
+            if (query) {
+                addDebugInfo("从查询字符串解析参数: " + query);
+                const queryParams = new URLSearchParams(query);
+                for (const [key, value] of queryParams) {
+                    params[key] = value;
+                }
+            }
+            
+            addDebugInfo("解析完成，找到参数: " + Object.keys(params).join(", "));
             return params;
         }
         
-        // 处理成功回调
-        async function handleSuccessCallback() {
-            const loadingEl = document.getElementById('loading');
-            const successEl = document.getElementById('success-content');
-            const errorEl = document.getElementById('error-message');
-            const errorDetailsEl = document.getElementById('error-details');
-            const tokenPreviewEl = document.getElementById('token-preview');
-            
-            try {
-                // 获取URL参数
-                const params = getUrlParameters();
+        // 加载Supabase库
+        function loadSupabase() {
+            return new Promise((resolve, reject) => {
+                addDebugInfo("开始加载Supabase库");
                 
-                // 显示令牌预览（前50个字符）
-                if (params.access_token) {
-                    tokenPreviewEl.textContent = params.access_token.substring(0, 50) + '...';
+                // 检查是否已加载
+                if (window.supabase) {
+                    addDebugInfo("Supabase库已加载");
+                    resolve(window.supabase);
+                    return;
                 }
                 
-                // 检查必要的参数
-                if (!params.access_token) {
-                    throw new Error('回调URL中缺少访问令牌');
-                }
+                // 创建脚本元素
+                const script = document.createElement("script");
+                script.src = "https://unpkg.com/@supabase/supabase-js@2.38.0/dist/umd/supabase.min.js";
+                script.onload = () => {
+                    addDebugInfo("Supabase库加载成功");
+                    resolve(window.supabase);
+                };
+                script.onerror = () => {
+                    addDebugInfo("Supabase库加载失败");
+                    reject(new Error("Failed to load Supabase library"));
+                };
                 
-                // 使用Supabase设置会话
-                const { data, error } = await supabase.auth.setSession({
-                    access_token: params.access_token,
-                    refresh_token: params.refresh_token
-                });
-                
-                if (error) {
-                    throw error;
-                }
-                
-                if (data && data.user) {
-                    // 验证成功，更新用户信息
-                    document.getElementById('user-email').textContent = data.user.email;
-                    if (data.user.user_metadata && data.user.user_metadata.username) {
-                        document.getElementById('user-name').textContent = data.user.user_metadata.username;
-                    }
-                    
-                    // 显示成功内容
-                    loadingEl.style.display = 'none';
-                    successEl.classList.remove('hidden');
-                    
-                    // 开始倒计时
-                    startCountdown();
-                } else {
-                    throw new Error('无法获取用户信息');
-                }
-            } catch (error) {
-                console.error('处理回调错误:', error);
-                loadingEl.style.display = 'none';
-                errorEl.classList.remove('hidden');
-                
-                // 提供更友好的错误信息
-                let errorMessage = '处理验证信息时出现问题。';
-                if (error.message.includes('Invalid Refresh Token')) {
-                    errorMessage = '刷新令牌无效，请重新登录。';
-                } else if (error.message.includes('Auth session missing')) {
-                    errorMessage = '认证会话丢失，请重新验证。';
-                }
-                
-                errorDetailsEl.textContent = errorMessage;
-            }
-        }
-        
-        // 倒计时并自动跳转
-        function startCountdown() {
-            let countdown = 5;
-            const countdownEl = document.getElementById('countdown');
-            const dashboardBtn = document.getElementById('dashboard-btn');
-            
-            const countdownInterval = setInterval(() => {
-                countdown--;
-                countdownEl.textContent = `${countdown}秒后自动跳转到剪贴板...`;
-                
-                if (countdown <= 0) {
-                    clearInterval(countdownInterval);
-                    window.location.href = 'dashboard.html';
-                }
-            }, 1000);
-            
-            // 点击按钮立即跳转
-            dashboardBtn.addEventListener('click', () => {
-                clearInterval(countdownInterval);
+                document.head.appendChild(script);
             });
         }
         
-        // 复制令牌功能
-        document.getElementById('copy-token').addEventListener('click', function() {
-            const params = getUrlParameters();
-            if (params.access_token) {
-                navigator.clipboard.writeText(params.access_token).then(() => {
-                    alert('令牌已复制到剪贴板');
-                }).catch(err => {
-                    console.error('复制失败:', err);
-                });
+        // 初始化Supabase客户端
+        function initSupabase() {
+            addDebugInfo("初始化Supabase客户端");
+            
+            // 从本地存储获取配置或使用默认值
+            const supabaseUrl = localStorage.getItem("supabase_url") || "https://your-project.supabase.co";
+            const supabaseKey = localStorage.getItem("supabase_key") || "your-anon-key";
+            
+            addDebugInfo("Supabase URL: " + supabaseUrl);
+            
+            // 检查配置是否正确
+            if (supabaseUrl.includes("your-project") || supabaseKey.includes("your-anon-key")) {
+                addDebugInfo("Supabase配置不正确，使用默认值");
             }
+            
+            try {
+                const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+                addDebugInfo("Supabase客户端初始化成功");
+                return supabaseClient;
+            } catch (error) {
+                addDebugInfo("Supabase客户端初始化失败: " + error.message);
+                throw error;
+            }
+        }
+        
+        // 设置用户会话
+        async function setUserSession(supabaseClient, accessToken, refreshToken) {
+            addDebugInfo("开始设置用户会话");
+            
+            try {
+                const { data, error } = await supabaseClient.auth.setSession({
+                    access_token: accessToken,
+                    refresh_token: refreshToken
+                });
+                
+                if (error) {
+                    addDebugInfo("设置会话失败: " + error.message);
+                    throw error;
+                }
+                
+                addDebugInfo("设置会话成功");
+                return data;
+            } catch (error) {
+                addDebugInfo("设置会话异常: " + error.message);
+                throw error;
+            }
+        }
+        
+        // 获取用户信息
+        async function getUserInfo(supabaseClient) {
+            addDebugInfo("开始获取用户信息");
+            
+            try {
+                const { data, error } = await supabaseClient.auth.getUser();
+                
+                if (error) {
+                    addDebugInfo("获取用户信息失败: " + error.message);
+                    throw error;
+                }
+                
+                addDebugInfo("获取用户信息成功: " + data.user.email);
+                return data;
+            } catch (error) {
+                addDebugInfo("获取用户信息异常: " + error.message);
+                throw error;
+            }
+        }
+        
+        // 处理验证回调
+        async function handleAuthCallback() {
+            addDebugInfo("开始处理验证回调");
+            
+            const loadingSection = document.getElementById("loading-section");
+            const successSection = document.getElementById("success-section");
+            const errorSection = document.getElementById("error-section");
+            const errorDetails = document.getElementById("error-details");
+            
+            try {
+                // 1. 获取URL参数
+                const params = getUrlParameters();
+                
+                // 检查必要的参数
+                if (!params.access_token) {
+                    throw new Error("URL中缺少访问令牌(access_token)");
+                }
+                
+                if (!params.refresh_token) {
+                    throw new Error("URL中缺少刷新令牌(refresh_token)");
+                }
+                
+                addDebugInfo("找到必要参数: access_token, refresh_token");
+                
+                // 2. 加载Supabase库
+                await loadSupabase();
+                
+                // 3. 初始化Supabase客户端
+                const supabaseClient = initSupabase();
+                
+                // 4. 设置用户会话
+                await setUserSession(supabaseClient, params.access_token, params.refresh_token);
+                
+                // 5. 获取用户信息验证会话
+                const userData = await getUserInfo(supabaseClient);
+                
+                // 6. 显示成功页面
+                loadingSection.classList.add("hidden");
+                successSection.classList.remove("hidden");
+                
+                addDebugInfo("验证流程完成，显示成功页面");
+                
+            } catch (error) {
+                console.error("验证回调处理失败:", error);
+                
+                // 显示错误页面
+                loadingSection.classList.add("hidden");
+                errorSection.classList.remove("hidden");
+                
+                let errorMessage = error.message || "验证过程中出现未知错误";
+                
+                // 提供更友好的错误信息
+                if (error.message.includes("Failed to fetch")) {
+                    errorMessage = "网络连接失败，请检查网络连接后重试";
+                } else if (error.message.includes("Invalid Refresh Token")) {
+                    errorMessage = "刷新令牌无效，请重新注册";
+                } else if (error.message.includes("Auth session missing")) {
+                    errorMessage = "认证会话丢失，请重新验证";
+                }
+                
+                errorDetails.textContent = errorMessage;
+                addDebugInfo("验证流程失败: " + error.message);
+            }
+        }
+        
+        // 重试按钮事件
+        document.getElementById("retry-btn").addEventListener("click", function() {
+            document.getElementById("error-section").classList.add("hidden");
+            document.getElementById("loading-section").classList.remove("hidden");
+            handleAuthCallback();
         });
         
         // 页面加载完成后开始处理
-        document.addEventListener('DOMContentLoaded', function() {
-            // 检查Supabase是否配置正确
-            if (supabaseUrl.includes('your-project') || supabaseKey.includes('your-anon-key')) {
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('error-message').classList.remove('hidden');
-                document.getElementById('error-details').textContent = 
-                    'Supabase 配置不正确。请确保在注册页面正确配置了 Supabase URL 和 Key。';
-                return;
-            }
-            
-            handleSuccessCallback();
+        document.addEventListener("DOMContentLoaded", function() {
+            addDebugInfo("页面加载完成，开始验证流程");
+            handleAuthCallback();
         });
     </script>
 </body>
