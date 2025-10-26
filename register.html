@@ -533,7 +533,16 @@
                         }
                     }
                 };
-                
+                const { data, error } = await supabase.auth.signUp({
+                        email: email,
+                        password: password,
+                        options: {
+                            data: {
+                                  username: username
+                            },
+                            emailRedirectTo: 'https://80yearoldboy.github.io/paste/redirect.html'
+                        }
+                });
                 // 如果提供了网站URL，添加重定向配置
                 if (siteUrl) {
                     signUpOptions.options.redirectTo = siteUrl;
